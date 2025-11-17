@@ -34,6 +34,35 @@ public class SocialAccount
 
     public DateTime? LastSyncedAt { get; set; }
 
+    // Facebook Page-specific fields
+    /// <summary>
+    /// Facebook Page ID (for page accounts). Used when posting to company/business pages.
+    /// </summary>
+    [StringLength(256)]
+    public string? PageId { get; set; }
+
+    /// <summary>
+    /// Page-specific access token (for Facebook pages). This is different from user access token.
+    /// Page tokens can be long-lived and don't expire unless the user changes their password.
+    /// </summary>
+    public string? PageAccessToken { get; set; }
+
+    /// <summary>
+    /// Display name of the Facebook Page (if applicable).
+    /// </summary>
+    [StringLength(200)]
+    public string? PageName { get; set; }
+
+    /// <summary>
+    /// Indicates if the account represents a Facebook Page (true) or personal profile (false).
+    /// </summary>
+    public bool IsPageAccount { get; set; } = false;
+
+    /// <summary>
+    /// Stores platform-specific metadata as JSON (e.g., permissions, page category, followers count).
+    /// </summary>
+    public string? Metadata { get; set; }
+
     // Navigation property
     [ForeignKey("UserId")]
     public virtual User User { get; set; } = null!;

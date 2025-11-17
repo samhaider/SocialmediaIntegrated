@@ -330,8 +330,25 @@ namespace SocialMediaAPI.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsPageAccount")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime?>("LastSyncedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("Metadata")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PageAccessToken")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PageId")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("PageName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("Platform")
                         .IsRequired()
