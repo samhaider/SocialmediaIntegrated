@@ -3,6 +3,7 @@ using SocialMediaAPI.Data;
 using SocialMediaAPI.DTOs;
 using SocialMediaAPI.Interfaces;
 using SocialMediaAPI.Models;
+using SocialMediaAPI.Services.LinkedIn;
 
 namespace SocialMediaAPI.Services;
 
@@ -10,17 +11,25 @@ public class SocialAccountService : ISocialAccountService
 {
     private readonly ApplicationDbContext _context;
     private readonly IEnumerable<ISocialMediaPlatform> _platforms;
+    private readonly ILinkedInOAuthService _linkedInOAuthService;
+    private readonly ILogger<SocialAccountService> _logger;
 
-    public SocialAccountService(ApplicationDbContext context, IEnumerable<ISocialMediaPlatform> platforms)
+    public SocialAccountService(
+        ApplicationDbContext context,
+        IEnumerable<ISocialMediaPlatform> platforms,
+        ILinkedInOAuthService linkedInOAuthService,
+        ILogger<SocialAccountService> logger)
     {
         _context = context;
         _platforms = platforms;
+        _linkedInOAuthService = linkedInOAuthService;
+        _logger = logger;
     }
 
     public async Task<SocialAccountResponse> ConnectAccountAsync(int userId, ConnectSocialAccountRequest request)
     {
         // Validate the connection with the platform
-        var platform = _platforms.FirstOrDefault(p => 
+        var platform = _platforms.FirstOrDefault(p =>
             p.PlatformName.Equals(request.Platform, StringComparison.OrdinalIgnoreCase));
 
         if (platform == null)
@@ -34,9 +43,38 @@ public class SocialAccountService : ISocialAccountService
             throw new InvalidOperationException("Invalid access token");
         }
 
+        // Get account ID from platform
+        string accountId;
+        string? accountName = null;
+
+        // For LinkedIn, fetch user info and organization details
+        if (request.Platform.Equals("LinkedIn", StringComparison.OrdinalIgnoreCase))
+        {
+            try
+            {
+                var userInfo = await _linkedInOAuthService.GetUserInfoAsync(request.AccessToken);
+                accountId = userInfo.Sub; // LinkedIn user ID
+                accountName = userInfo.Name ?? userInfo.Email;
+
+                _logger.LogInformation("Retrieved LinkedIn user info. Account ID: {AccountId}, Name: {Name}",
+                    accountId, accountName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to retrieve LinkedIn user info");
+                accountId = Guid.NewGuid().ToString();
+            }
+        }
+        else
+        {
+            accountId = Guid.NewGuid().ToString(); // In real implementation, fetch from platform
+        }
+
         // Check if account already exists
         var existingAccount = await _context.SocialAccounts
-            .FirstOrDefaultAsync(sa => sa.UserId == userId && sa.Platform == request.Platform);
+            .FirstOrDefaultAsync(sa => sa.UserId == userId &&
+                                      sa.Platform == request.Platform &&
+                                      sa.AccountId == accountId);
 
         if (existingAccount != null)
         {
@@ -44,8 +82,16 @@ public class SocialAccountService : ISocialAccountService
             existingAccount.AccessToken = request.AccessToken;
             existingAccount.RefreshToken = request.RefreshToken;
             existingAccount.TokenExpiresAt = request.TokenExpiresAt;
+            existingAccount.AccountName = accountName ?? existingAccount.AccountName;
+            existingAccount.OrganizationId = request.OrganizationId;
+            existingAccount.OrganizationName = request.OrganizationName;
+            existingAccount.AccountType = request.AccountType;
+            existingAccount.Scopes = request.Scopes;
             existingAccount.IsActive = true;
             existingAccount.LastSyncedAt = DateTime.UtcNow;
+
+            _logger.LogInformation("Updated existing social account. ID: {AccountId}, Platform: {Platform}",
+                existingAccount.Id, request.Platform);
         }
         else
         {
@@ -54,21 +100,31 @@ public class SocialAccountService : ISocialAccountService
             {
                 UserId = userId,
                 Platform = request.Platform,
-                AccountId = Guid.NewGuid().ToString(), // In real implementation, fetch from platform
+                AccountId = accountId,
+                AccountName = accountName,
                 AccessToken = request.AccessToken,
                 RefreshToken = request.RefreshToken,
                 TokenExpiresAt = request.TokenExpiresAt,
+                OrganizationId = request.OrganizationId,
+                OrganizationName = request.OrganizationName,
+                AccountType = request.AccountType,
+                Scopes = request.Scopes,
                 IsActive = true,
                 ConnectedAt = DateTime.UtcNow
             };
 
             _context.SocialAccounts.Add(account);
+
+            _logger.LogInformation("Created new social account. Platform: {Platform}, AccountType: {AccountType}",
+                request.Platform, request.AccountType);
         }
 
         await _context.SaveChangesAsync();
 
         var updatedAccount = await _context.SocialAccounts
-            .FirstAsync(sa => sa.UserId == userId && sa.Platform == request.Platform);
+            .FirstAsync(sa => sa.UserId == userId &&
+                             sa.Platform == request.Platform &&
+                             sa.AccountId == accountId);
 
         return MapToResponse(updatedAccount);
     }
@@ -107,7 +163,11 @@ public class SocialAccountService : ISocialAccountService
             AccountId = account.AccountId,
             AccountName = account.AccountName,
             IsActive = account.IsActive,
-            ConnectedAt = account.ConnectedAt
+            ConnectedAt = account.ConnectedAt,
+            OrganizationId = account.OrganizationId,
+            OrganizationName = account.OrganizationName,
+            AccountType = account.AccountType,
+            Scopes = account.Scopes
         };
     }
 }

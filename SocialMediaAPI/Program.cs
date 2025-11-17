@@ -2,9 +2,13 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Polly;
+using Polly.Extensions.Http;
+using SocialMediaAPI.Configuration;
 using SocialMediaAPI.Data;
 using SocialMediaAPI.Interfaces;
 using SocialMediaAPI.Services;
+using SocialMediaAPI.Services.LinkedIn;
 using SocialMediaAPI.Services.Platforms;
 using System.Text;
 
@@ -16,6 +20,41 @@ builder.Services.AddControllers();
 // Configure Entity Framework with SQL Server
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Configure LinkedIn settings
+builder.Services.Configure<LinkedInSettings>(
+    builder.Configuration.GetSection("LinkedIn"));
+
+// Configure HttpClient with Polly for resilience and retry logic
+var retryPolicy = HttpPolicyExtensions
+    .HandleTransientHttpError()
+    .OrResult(msg => msg.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+    .WaitAndRetryAsync(
+        retryCount: 4,
+        sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
+        onRetry: (outcome, timespan, retryAttempt, context) =>
+        {
+            var logger = builder.Services.BuildServiceProvider()
+                .GetService<ILogger<Program>>();
+            logger?.LogWarning(
+                "Retry {RetryAttempt} after {Delay}s due to {StatusCode}",
+                retryAttempt, timespan.TotalSeconds, outcome.Result?.StatusCode);
+        });
+
+var timeoutPolicy = Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(30));
+
+// Register LinkedIn services with HttpClient
+builder.Services.AddHttpClient<ILinkedInOAuthService, LinkedInOAuthService>()
+    .AddPolicyHandler(retryPolicy)
+    .AddPolicyHandler(timeoutPolicy);
+
+builder.Services.AddHttpClient<ILinkedInApiClient, LinkedInApiClient>()
+    .AddPolicyHandler(retryPolicy)
+    .AddPolicyHandler(timeoutPolicy);
+
+builder.Services.AddHttpClient<ILinkedInMediaService, LinkedInMediaService>()
+    .AddPolicyHandler(retryPolicy)
+    .AddPolicyHandler(timeoutPolicy);
 
 // Configure JWT Authentication
 var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not configured");

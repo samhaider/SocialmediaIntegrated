@@ -34,6 +34,20 @@ public class SocialAccount
 
     public DateTime? LastSyncedAt { get; set; }
 
+    // LinkedIn-specific fields for organization/company page support
+    [StringLength(256)]
+    public string? OrganizationId { get; set; } // LinkedIn organization URN (e.g., urn:li:organization:123456)
+
+    [StringLength(200)]
+    public string? OrganizationName { get; set; } // Company/Organization name
+
+    [StringLength(50)]
+    public string AccountType { get; set; } = "Personal"; // "Personal" or "Organization"
+
+    public string? Scopes { get; set; } // OAuth scopes granted (comma-separated)
+
+    public string? AdditionalData { get; set; } // JSON field for platform-specific data
+
     // Navigation property
     [ForeignKey("UserId")]
     public virtual User User { get; set; } = null!;
