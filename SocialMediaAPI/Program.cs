@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using SocialMediaAPI.Data;
 using SocialMediaAPI.Interfaces;
+using SocialMediaAPI.Models;
 using SocialMediaAPI.Services;
 using SocialMediaAPI.Services.Platforms;
 using System.Text;
@@ -12,6 +13,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddControllers();
+
+// Add HttpClient factory for API calls
+builder.Services.AddHttpClient();
 
 // Configure Entity Framework with SQL Server
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -36,12 +40,20 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
+// Configure Reddit settings
+builder.Services.Configure<RedditConfiguration>(
+    builder.Configuration.GetSection("Reddit"));
+
 // Register application services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<ISocialAccountService, SocialAccountService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 builder.Services.AddScoped<IMediaService, MediaService>();
+
+// Register Reddit services
+builder.Services.AddScoped<IRedditOAuthService, RedditOAuthService>();
+builder.Services.AddScoped<IRedditApiService, RedditApiService>();
 
 // Register background services
 builder.Services.AddHostedService<PostSchedulerService>();
