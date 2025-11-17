@@ -36,12 +36,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
+// Register HttpClient for external API calls
+builder.Services.AddHttpClient();
+
 // Register application services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<ISocialAccountService, SocialAccountService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 builder.Services.AddScoped<IMediaService, MediaService>();
+builder.Services.AddScoped<IPinterestService, PinterestService>();
 
 // Register background services
 builder.Services.AddHostedService<PostSchedulerService>();
