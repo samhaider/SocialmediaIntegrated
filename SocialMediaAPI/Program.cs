@@ -2,9 +2,11 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using SocialMediaAPI.Configuration;
 using SocialMediaAPI.Data;
 using SocialMediaAPI.Interfaces;
 using SocialMediaAPI.Services;
+using SocialMediaAPI.Services.Instagram;
 using SocialMediaAPI.Services.Platforms;
 using System.Text;
 
@@ -35,6 +37,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
+
+// Configure Instagram settings
+builder.Services.Configure<InstagramSettings>(builder.Configuration.GetSection("Instagram"));
+
+// Register HttpClient for Instagram API calls
+builder.Services.AddHttpClient<IInstagramGraphApiService, InstagramGraphApiService>();
+
+// Register Instagram Graph API service
+builder.Services.AddScoped<IInstagramGraphApiService, InstagramGraphApiService>();
 
 // Register application services
 builder.Services.AddScoped<IAuthService, AuthService>();
