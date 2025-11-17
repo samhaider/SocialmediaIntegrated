@@ -54,21 +54,43 @@ git clone https://github.com/samhaider/SocialmediaIntegrated.git
 cd SocialmediaIntegrated
 ```
 
-2. Update the connection string in `appsettings.json`:
+2. Update the connection string in `SocialMediaAPI/appsettings.json` to match your SQL Server instance:
+
+**For Windows with LocalDB:**
 ```json
 "ConnectionStrings": {
   "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=SocialMediaDB;Trusted_Connection=true;MultipleActiveResultSets=true"
 }
 ```
 
-3. Create the database:
+**For SQL Server with authentication:**
+```json
+"ConnectionStrings": {
+  "DefaultConnection": "Server=localhost;Database=SocialMediaDB;User Id=sa;Password=YourPassword;TrustServerCertificate=true;MultipleActiveResultSets=true"
+}
+```
+
+**For Azure SQL:**
+```json
+"ConnectionStrings": {
+  "DefaultConnection": "Server=tcp:yourserver.database.windows.net,1433;Database=SocialMediaDB;User ID=yourusername;Password=yourpassword;Encrypt=True;TrustServerCertificate=False;"
+}
+```
+
+3. Update the JWT secret key in `SocialMediaAPI/appsettings.json` (must be at least 32 characters):
+```json
+"Jwt": {
+  "Key": "YourSecureKeyHere_AtLeast32Characters!"
+}
+```
+
+4. Create the database (migrations are already included):
 ```bash
 cd SocialMediaAPI
-dotnet ef migrations add InitialCreate
 dotnet ef database update
 ```
 
-4. Run the application:
+5. Run the application:
 ```bash
 dotnet run
 ```
