@@ -19,16 +19,24 @@ A unified REST API that connects to 13+ social networks (Facebook, Instagram, Tw
 - **JWT Authentication** - Secure token-based authentication
 - **Swagger/OpenAPI** - API documentation
 
-## Supported Platforms
+## Supported Platforms (13+)
 
-The API currently provides interfaces for:
-- Facebook
-- Instagram
-- Twitter/X
-- LinkedIn
-- TikTok
-- YouTube
-- And more...
+The API provides unified interfaces for 13+ social media platforms:
+1. **Facebook** - World's largest social network
+2. **Instagram** - Photo and video sharing platform
+3. **Twitter/X** - Microblogging and social networking
+4. **LinkedIn** - Professional networking platform
+5. **TikTok** - Short-form video platform
+6. **YouTube** - Video sharing and streaming
+7. **Pinterest** - Visual discovery and bookmarking
+8. **Snapchat** - Multimedia messaging
+9. **Reddit** - Social news aggregation and discussion
+10. **Tumblr** - Microblogging and social networking
+11. **Medium** - Online publishing platform
+12. **VK** - Russian social networking service
+13. **Telegram** - Cloud-based instant messaging
+
+Each platform implements a common interface, allowing for seamless multi-platform posting and management.
 
 ## Getting Started
 

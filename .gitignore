@@ -119,10 +119,6 @@ nCrunchTemp_*
 # NuGet Symbol Packages
 *.snupkg
 
-# Entity Framework Migrations
-**/Migrations/*.Designer.cs
-**/Migrations/*.cs
-
 # Uploaded media files
 uploads/
 wwwroot/uploads/

@@ -43,11 +43,23 @@ builder.Services.AddScoped<ISocialAccountService, SocialAccountService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 builder.Services.AddScoped<IMediaService, MediaService>();
 
-// Register social media platform implementations
+// Register background services
+builder.Services.AddHostedService<PostSchedulerService>();
+
+// Register social media platform implementations (13+ platforms)
 builder.Services.AddScoped<ISocialMediaPlatform, FacebookPlatform>();
 builder.Services.AddScoped<ISocialMediaPlatform, TwitterPlatform>();
 builder.Services.AddScoped<ISocialMediaPlatform, InstagramPlatform>();
 builder.Services.AddScoped<ISocialMediaPlatform, LinkedInPlatform>();
+builder.Services.AddScoped<ISocialMediaPlatform, TikTokPlatform>();
+builder.Services.AddScoped<ISocialMediaPlatform, YouTubePlatform>();
+builder.Services.AddScoped<ISocialMediaPlatform, PinterestPlatform>();
+builder.Services.AddScoped<ISocialMediaPlatform, SnapchatPlatform>();
+builder.Services.AddScoped<ISocialMediaPlatform, RedditPlatform>();
+builder.Services.AddScoped<ISocialMediaPlatform, TumblrPlatform>();
+builder.Services.AddScoped<ISocialMediaPlatform, MediumPlatform>();
+builder.Services.AddScoped<ISocialMediaPlatform, VKPlatform>();
+builder.Services.AddScoped<ISocialMediaPlatform, TelegramPlatform>();
 
 // Configure Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
